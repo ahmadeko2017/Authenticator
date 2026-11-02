@@ -23,15 +23,29 @@ window.addEventListener("message", (event) => {
 
   switch (message.action) {
     case "hash":
-      Argon.hash(message.value, message.salt).then((hash) => {
-        source.postMessage({ response: hash }, event.origin);
-      });
+      Argon.hash(message.value, message.salt)
+        .then((hash) => {
+          source.postMessage({ response: hash }, event.origin);
+        })
+        .catch((err) => {
+          source.postMessage(
+            { error: err?.message || "Argon hash failed" },
+            event.origin
+          );
+        });
       break;
 
     case "verify":
-      Argon.compareHash(message.hash, message.value).then((result) => {
-        source.postMessage({ response: result }, event.origin);
-      });
+      Argon.compareHash(message.hash, message.value)
+        .then((result) => {
+          source.postMessage({ response: result }, event.origin);
+        })
+        .catch((err) => {
+          source.postMessage(
+            { error: err?.message || "Argon verify failed" },
+            event.origin
+          );
+        });
       break;
 
     default:

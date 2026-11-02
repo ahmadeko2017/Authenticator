@@ -7,14 +7,24 @@ async function sendArgonMessage<T>(message: object): Promise<T> {
     throw new Error("argon-sandbox missing!");
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      window.removeEventListener("message", handler);
+      reject(new Error("Argon sandbox response timeout"));
+    }, 10000);
+
     const handler = (event: MessageEvent) => {
       // Validasi origin & source: hanya terima respons dari sandbox iframe milik sendiri
       if (event.source !== contentWindow) {
         return;
       }
+      clearTimeout(timer);
       window.removeEventListener("message", handler);
-      resolve(event.data?.response);
+      if (event.data?.error) {
+        reject(new Error(event.data.error));
+      } else {
+        resolve(event.data?.response);
+      }
     };
 
     window.addEventListener("message", handler);
