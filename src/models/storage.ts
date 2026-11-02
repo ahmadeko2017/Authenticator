@@ -127,8 +127,37 @@ export class BrowserStorage {
     return keys;
   }
 
+  private static containsUnencryptedSecrets(data: object): boolean {
+    for (const key of Object.keys(data)) {
+      const item = (data as Record<string, unknown>)[key];
+      if (item && typeof item === "object") {
+        const entry = item as Record<string, unknown>;
+        if ("secret" in entry && entry.secret && entry.encrypted !== true) {
+          return true;
+        }
+        if (entry.dataType === "OTPStorage" && entry.secret) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   static async set(data: object) {
-    const storageLocation = await this.getStorageLocation();
+    let storageLocation = await this.getStorageLocation();
+
+    // GUARD KEAMANAN (HIGH-01): Cegah penulisan plaintext OTP secret ke cloud sync.
+    // Jika data memuat secret yang belum dienkripsi, paksa isolasi ke storage lokal.
+    if (
+      storageLocation === StorageLocation.Sync &&
+      this.containsUnencryptedSecrets(data)
+    ) {
+      console.warn(
+        "[SECURITY GUARD] Entri memuat secret tanpa enkripsi. Dialihkan otomatis ke storage lokal demi privasi."
+      );
+      storageLocation = StorageLocation.Local;
+    }
+
     if (storageLocation === StorageLocation.Local) {
       await chrome.storage.local.set(data);
     } else if (storageLocation === StorageLocation.Sync) {

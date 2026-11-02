@@ -21,15 +21,20 @@ async function main() {
 
   // Mock chrome API environment
   await page.evaluateOnNewDocument((messages, messagesUrl) => {
+    const extId = "bhghoamapcdpbohphigoooaddinpkbai";
     window.chrome = window.chrome || {};
-    window.chrome.runtime = window.chrome.runtime || {
-      getURL: (p) => messagesUrl,
-      id: "bhghoamapcdpbohphigoooaddinpkbai",
-      onMessage: { addListener: () => {} },
-      sendMessage: () => {},
-      getManifest: () => ({ version: "8.0.2" })
+    window.chrome.runtime = window.chrome.runtime || {};
+    window.chrome.runtime.id = extId;
+    window.chrome.runtime.getURL = (p) => {
+      if (p && p.includes("messages.json")) {
+        return messagesUrl;
+      }
+      return `chrome-extension://${extId}/` + (p ? p.replace(/^\//, "") : "");
     };
+    window.chrome.runtime.onMessage = { addListener: () => {} };
+    window.chrome.runtime.sendMessage = () => {};
     window.chrome.runtime.getManifest = () => ({ version: "8.0.2" });
+
     window.chrome.i18n = window.chrome.i18n || {
       getMessage: (key) => (messages[key] ? messages[key].message : key)
     };

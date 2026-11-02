@@ -166,3 +166,17 @@ export function okToInjectContentScript(
       tab.url.startsWith("file://"))
   );
 }
+
+/**
+ * Memvalidasi apakah pengirim pesan berasal dari internal ekstensi (popup, options)
+ * dan BUKAN dari content script halaman web (CRIT/HIGH-04).
+ */
+export function isInternalExtensionSender(
+  sender: chrome.runtime.MessageSender
+): boolean {
+  if (sender.tab) {
+    return false;
+  }
+  const extensionOrigin = chrome.runtime.getURL("");
+  return Boolean(sender.url && sender.url.startsWith(extensionOrigin));
+}
