@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import * as CryptoJS from "crypto-js";
+import sinon from "sinon";
 import { Encryption } from "../models/encryption";
 
 describe("Security P2: Authenticated Encryption (AEAD) & Integrity Hardening", () => {
@@ -93,5 +94,21 @@ describe("Security P2: Authenticated Encryption (AEAD) & Integrity Hardening", (
     // Assert: Mengembalikan data asli jika belum ada password
     expect(result).to.equal(sampleSecret);
     expect(encryptionEmpty.getEncryptionStatus()).to.be.false;
+  });
+  it("should_fail_closed_and_throw_when_encryption_fails", () => {
+    // Arrange: Simulasikan kegagalan enkripsi (fail-closed)
+    const encryption = new Encryption(masterPassword, keyId);
+    const stub = sinon
+      .stub(CryptoJS.AES, "encrypt")
+      .throws(new Error("Random entropy exhausted"));
+
+    try {
+      // Act & Assert: Wajib melempar error dan DILARANG mengembalikan plaintext
+      expect(() => encryption.getEncryptedString(sampleSecret)).to.throw(
+        /fail-closed/i
+      );
+    } finally {
+      stub.restore();
+    }
   });
 });

@@ -49,8 +49,11 @@ export class Encryption implements EncryptionInterface {
 
       return `v2:${saltHex}:${ivHex}:${cipherText}:${hmac}`;
     } catch (error) {
-      console.error("[ENCRYPTION] Gagal mengenkripsi payload:", error);
-      return data;
+      console.error("[SECURITY GUARD] Gagal mengenkripsi payload:", error);
+      throw new Error(
+        "Gagal mengenkripsi payload secara aman (fail-closed): " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   }
 
