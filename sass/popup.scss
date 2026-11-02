@@ -21,9 +21,6 @@ body {
   height: 540px;
   transform-origin: left top;
   overflow: hidden;
-  border-radius: 16px;
-  border: 1px solid hsl(var(--border));
-  box-shadow: none;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   cursor: default;
@@ -72,8 +69,6 @@ svg {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid hsl(var(--border));
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
   color: hsl(var(--foreground));
   z-index: 50;
 
@@ -218,13 +213,11 @@ svg {
 
 // Codes Container
 #codes {
-  height: 490px;
+  height: 492px;
   overflow-x: hidden;
   overflow-y: auto;
   background: hsl(var(--background));
-  padding: 6px 0 16px 0;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
+  padding: 4px 0 16px 0;
 
   .deleteAction {
     position: absolute;
@@ -618,8 +611,6 @@ svg {
   left: 0;
   position: absolute;
   z-index: 500;
-  border-radius: 16px;
-  overflow: hidden;
   background-color: hsla(var(--background), 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -918,8 +909,6 @@ svg {
   left: -1000px;
   top: 0;
   z-index: 500;
-  border-radius: 16px;
-  overflow: hidden;
 
   &.slidein {
     left: 0;
