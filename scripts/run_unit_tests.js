@@ -57,12 +57,9 @@ async function main() {
     window.chrome.storage = window.chrome.storage || {};
     window.chrome.storage.managed = {
       get: (keys, cb) => {
-        const data = { feedbackURL: "https://example.com/feedback" };
-        if (typeof keys === "function") {
-          keys(data);
-        } else if (typeof cb === "function") {
-          cb(data);
-        }
+        const callback = typeof keys === "function" ? keys : cb;
+        const data = { feedbackURL: "https://authenticator.cc" };
+        if (callback) callback(data);
         return Promise.resolve(data);
       }
     };

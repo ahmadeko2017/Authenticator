@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { isInternalExtensionSender } from "../utils";
+import { BrowserStorage } from "../models/storage";
 
 describe("Security P1: Service Worker Message Sender Validation", () => {
   it("should_reject_sender_when_message_originates_from_web_tab", () => {
@@ -56,5 +57,56 @@ describe("Security P1: Service Worker Message Sender Validation", () => {
 
     // Assert: Wajib ditolak
     expect(isAllowed).to.be.false;
+  });
+});
+
+describe("Security P1: Cloud Sync Plaintext Secret Guard", () => {
+  it("should_detect_unencrypted_secret_in_storage_payload", () => {
+    // Arrange: payload dengan secret unencrypted
+    const rawPayload = {
+      "hash-1": {
+        account: "alice@example.com",
+        secret: "JBSWY3DPEHPK3PXP",
+        encrypted: false,
+      },
+    };
+
+    // Act
+    const hasUnencrypted = BrowserStorage.containsUnencryptedSecrets(rawPayload);
+
+    // Assert: Wajib terdeteksi true
+    expect(hasUnencrypted).to.be.true;
+  });
+
+  it("should_not_flag_payload_when_secrets_are_properly_encrypted", () => {
+    // Arrange: payload yang sudah dienkripsi
+    const encryptedPayload = {
+      "hash-2": {
+        dataType: "EncOTPStorage",
+        data: "encrypted-ciphertext-blob",
+        keyId: "key-1",
+        encrypted: true,
+      },
+    };
+
+    // Act
+    const hasUnencrypted = BrowserStorage.containsUnencryptedSecrets(encryptedPayload);
+
+    // Assert: Wajib false
+    expect(hasUnencrypted).to.be.false;
+  });
+
+  it("should_not_flag_settings_payload_without_secrets", () => {
+    // Arrange: UserSettings biasa tanpa secret OTP
+    const settingsPayload = {
+      theme: "dark",
+      zoom: 100,
+    };
+
+    // Act
+    const hasUnencrypted = BrowserStorage.containsUnencryptedSecrets(settingsPayload);
+
+    // Assert: Wajib false
+    expect(hasUnencrypted).to.be.false;
   });
 });
