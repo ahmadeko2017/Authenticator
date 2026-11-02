@@ -99,40 +99,46 @@ export function getMatchedEntriesHash(
   return false;
 }
 
-function isMatchedEntry(
+export function isMatchedEntry(
   siteName: Array<string | null>,
   entry: OTPEntryInterface
-) {
+): boolean {
   if (!entry.issuer) {
     return false;
   }
 
-  const issuerHostMatches = entry.issuer.split("::");
-  const issuer = issuerHostMatches[0].replace(/[^0-9a-z]/gi, "").toLowerCase();
-
-  if (!issuer) {
+  const siteHost = siteName[2]?.toLowerCase() || "";
+  const siteNameFromHost = siteName[1]?.toLowerCase() || "";
+  if (!siteHost) {
     return false;
   }
 
-  const siteTitle = siteName[0] || "";
-  const siteNameFromHost = siteName[1] || "";
-  const siteHost = siteName[2] || "";
+  const issuerParts = entry.issuer.split("::");
+  const issuer = issuerParts[0].trim().toLowerCase();
 
-  if (issuerHostMatches.length > 1) {
-    if (siteHost && siteHost.indexOf(issuerHostMatches[1]) !== -1) {
+  // 1. Host eksplisit terdefinisi (contoh: "Google::google.com")
+  if (issuerParts.length > 1) {
+    const explicitHost = issuerParts[1].trim().toLowerCase();
+    if (explicitHost && (siteHost === explicitHost || siteHost.endsWith("." + explicitHost))) {
       return true;
     }
   }
-  // site title should be more detailed
-  // so we use siteTitle.indexOf(issuer)
-  if (siteTitle && siteTitle.indexOf(issuer) !== -1) {
+
+  // 2. Issuer berbentuk domain (contoh: "github.com")
+  if (issuer.includes(".")) {
+    if (siteHost === issuer || siteHost.endsWith("." + issuer)) {
+      return true;
+    }
+  }
+
+  // 3. Exact match antara subdomain/nama host dengan issuer
+  const cleanIssuer = issuer.replace(/[^a-z0-9]/g, "");
+  if (cleanIssuer && siteNameFromHost === cleanIssuer) {
     return true;
   }
 
-  if (siteNameFromHost && issuer.indexOf(siteNameFromHost) !== -1) {
-    return true;
-  }
-
+  // CATATAN KEAMANAN (CRIT-01): Dilarang mencocokkan document.title.
+  // Judul halaman dapat dipalsukan oleh penyerang phishing untuk mencuri OTP.
   return false;
 }
 
@@ -159,4 +165,18 @@ export function okToInjectContentScript(
       tab.url.startsWith("http://") ||
       tab.url.startsWith("file://"))
   );
+}
+
+/**
+ * Memvalidasi apakah pengirim pesan berasal dari internal ekstensi (popup, options)
+ * dan BUKAN dari content script halaman web (CRIT/HIGH-04).
+ */
+export function isInternalExtensionSender(
+  sender: chrome.runtime.MessageSender
+): boolean {
+  if (sender.tab) {
+    return false;
+  }
+  const extensionOrigin = chrome.runtime.getURL("");
+  return Boolean(sender.url && sender.url.startsWith(extensionOrigin));
 }

@@ -1,55 +1,57 @@
 import { BrowserStorage, isOldKey } from "./storage";
 
+async function sendArgonMessage<T>(message: object): Promise<T> {
+  const iframe = document.getElementById("argon-sandbox") as HTMLIFrameElement;
+  const contentWindow = iframe?.contentWindow;
+  if (!iframe || !contentWindow) {
+    throw new Error("argon-sandbox missing!");
+  }
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      window.removeEventListener("message", handler);
+      reject(new Error("Argon sandbox response timeout"));
+    }, 10000);
+
+    const handler = (event: MessageEvent) => {
+      // Validasi origin & source: hanya terima respons dari sandbox iframe milik sendiri
+      if (event.source !== contentWindow) {
+        return;
+      }
+      clearTimeout(timer);
+      window.removeEventListener("message", handler);
+      if (event.data?.error) {
+        reject(new Error(event.data.error));
+      } else {
+        resolve(event.data?.response);
+      }
+    };
+
+    window.addEventListener("message", handler);
+    contentWindow.postMessage(message, "*");
+  });
+}
+
 export async function argonHash(
   value: string,
   salt: string
 ): Promise<string | undefined> {
-  const iframe = document.getElementById("argon-sandbox");
-  const message = {
+  return sendArgonMessage<string | undefined>({
     action: "hash",
     value,
     salt,
-  };
-
-  if (!iframe) {
-    throw new Error("argon-sandbox missing!");
-  }
-
-  const argonPromise: Promise<string | undefined> = new Promise((resolve) => {
-    window.addEventListener("message", (response) => {
-      resolve(response.data.response);
-    });
-    // @ts-expect-error bad typings
-    iframe.contentWindow.postMessage(message, "*");
   });
-
-  return argonPromise;
 }
 
 export async function argonVerify(
   value: string,
   hash: string
 ): Promise<boolean> {
-  const iframe = document.getElementById("argon-sandbox");
-  const message = {
+  return sendArgonMessage<boolean>({
     action: "verify",
     value,
     hash,
-  };
-
-  if (!iframe) {
-    throw new Error("argon-sandbox missing!");
-  }
-
-  const argonPromise: Promise<boolean> = new Promise((resolve) => {
-    window.addEventListener("message", (response) => {
-      resolve(response.data.response);
-    });
-    // @ts-expect-error bad typings
-    iframe.contentWindow.postMessage(message, "*");
   });
-
-  return argonPromise;
 }
 
 // Verify a password using keys in BrowserStorage

@@ -7,6 +7,7 @@ import {
   getMatchedEntries,
   getCurrentTab,
   okToInjectContentScript,
+  isInternalExtensionSender,
 } from "./utils";
 import { CodeState } from "./models/otp";
 
@@ -17,7 +18,34 @@ import { UserSettings } from "./models/settings";
 let contentTab: chrome.tabs.Tab | undefined;
 
 chrome.runtime.onMessage.addListener(async (message, sender) => {
+  if (!message || typeof message !== "object") {
+    return false;
+  }
+
   await UserSettings.updateItems();
+
+  // GUARD KEAMANAN (HIGH-04): Validasi pengirim pesan administratif.
+  // Content script dilarang memicu mutasi kunci, lock, autolock, atau token cloud.
+  const privilegedActions = [
+    "cachePassphrase",
+    "lock",
+    "resetAutolock",
+    "updateContentTab",
+    "updateContextMenu",
+    "dropbox",
+    "drive",
+    "onedrive",
+  ];
+
+  if (
+    privilegedActions.indexOf(message.action) !== -1 &&
+    !isInternalExtensionSender(sender)
+  ) {
+    console.warn(
+      `[SECURITY GUARD] Aksi administratif '${message.action}' ditolak dari pengirim eksternal/tab.`
+    );
+    return false;
+  }
 
   if (message.action === "getCapture") {
     if (!sender.tab) {

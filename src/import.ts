@@ -1,3 +1,4 @@
+import { argonHash, argonVerify } from "./models/password";
 import Vue from "vue";
 import ImportView from "./components/Import.vue";
 import CommonComponents from "./components/common/index";
@@ -143,21 +144,10 @@ async function findAndUnlockKey(
     return null;
   }
 
-  const rawHash = await new Promise((resolve: (value: string) => void) => {
-    const iframe = document.getElementById("argon-sandbox");
-    const message = {
-      action: "hash",
-      value: password,
-      salt: key.salt,
-    };
-    if (iframe) {
-      window.addEventListener("message", (response) => {
-        resolve(response.data.response);
-      });
-      // @ts-expect-error bad typings
-      iframe.contentWindow.postMessage(message, "*");
-    }
-  });
+  const rawHash = await argonHash(password, key.salt);
+  if (!rawHash) {
+    throw new Error("argon2 did not return a hash!");
+  }
 
   // https://passlib.readthedocs.io/en/stable/lib/passlib.hash.argon2.html#format-algorithm
   const possibleHash = rawHash.split("$")[5];
@@ -165,26 +155,7 @@ async function findAndUnlockKey(
     throw new Error("argon2 did not return a hash!");
   }
 
-  // verify user password by comparing their password hash with the
-  // hash of their password's hash
-  const isCorrectPassword = await new Promise(
-    (resolve: (value: string) => void) => {
-      const iframe = document.getElementById("argon-sandbox");
-      const message = {
-        action: "verify",
-        value: possibleHash,
-        hash: key.hash,
-      };
-      if (iframe) {
-        window.addEventListener("message", (response) => {
-          resolve(response.data.response);
-        });
-        // @ts-expect-error bad typings
-        iframe.contentWindow.postMessage(message, "*");
-      }
-    }
-  );
-
+  const isCorrectPassword = await argonVerify(possibleHash, key.hash);
   if (!isCorrectPassword) {
     return null;
   }

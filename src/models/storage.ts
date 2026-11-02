@@ -90,6 +90,14 @@ export class BrowserStorage {
       items = await chrome.storage.local.get();
     } else if (storageLocation === "sync") {
       items = await chrome.storage.sync.get();
+      try {
+        const localItems =
+          (await chrome.storage.local.get()) as Record<string, OTPStorage>;
+        removeOtherData(localItems);
+        items = Object.assign({}, localItems, items);
+      } catch {
+        // Abaikan jika storage local tidak merespons
+      }
     }
 
     removeOtherData(items);
@@ -127,8 +135,46 @@ export class BrowserStorage {
     return keys;
   }
 
+  static containsUnencryptedSecrets(data: object): boolean {
+    for (const key of Object.keys(data)) {
+      const item = (data as Record<string, unknown>)[key];
+      if (item && typeof item === "object") {
+        const entry = item as Record<string, unknown>;
+        if ("secret" in entry && entry.secret && entry.encrypted !== true) {
+          return true;
+        }
+        if (entry.dataType === "OTPStorage" && entry.secret) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   static async set(data: object) {
-    const storageLocation = await this.getStorageLocation();
+    let storageLocation = await this.getStorageLocation();
+
+    // GUARD KEAMANAN (HIGH-01): Cegah penulisan plaintext OTP secret ke cloud sync.
+    // Jika data memuat secret yang belum dienkripsi, paksa isolasi ke storage lokal.
+    if (
+      storageLocation === StorageLocation.Sync &&
+      this.containsUnencryptedSecrets(data)
+    ) {
+      console.warn(
+        "[SECURITY GUARD] Entri memuat secret tanpa enkripsi. Dialihkan otomatis ke storage lokal demi privasi."
+      );
+      storageLocation = StorageLocation.Local;
+      if (typeof UserSettings !== "undefined" && UserSettings.items) {
+        UserSettings.items.storageLocation = StorageLocation.Local;
+        await UserSettings.commitItems();
+      }
+      try {
+        await chrome.storage.sync.remove(Object.keys(data));
+      } catch {
+        // Abaikan jika sync storage tidak dapat diakses
+      }
+    }
+
     if (storageLocation === StorageLocation.Local) {
       await chrome.storage.local.set(data);
     } else if (storageLocation === StorageLocation.Sync) {
