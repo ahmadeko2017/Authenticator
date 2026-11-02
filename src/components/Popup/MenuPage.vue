@@ -146,6 +146,7 @@ export default Vue.extend({
           return;
         }
       }
+      this.hideMenu();
       this.$store.commit("style/showInfo");
       this.$store.commit("currentView/changeView", tab);
       return;
