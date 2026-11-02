@@ -520,5 +520,9 @@
   },
   "activate_auto_filter": {
     "message": "Warning: Smart filter loosely matches the domain name to an account. Always verify that you are on the correct website before entering a code!"
+  },
+  "backup_enc_info": {
+    "message": "Cadangan Anda dilindungi dan dienkripsi dengan kata sandi utama (AES-256-GCM).",
+    "description": "Teks status cadangan terenkripsi"
   }
 }

@@ -179,6 +179,10 @@ export default Vue.extend({
       codesEl.scrollTop = 0;
     },
     showQr(entry: OTPEntry) {
+      // Pastikan secret tidak null/terenkripsi sebelum menampilkan QR
+      if (!entry.secret) {
+        return;
+      }
       this.$store.commit("qr/setQr", getQrUrl(entry));
       this.$store.commit("style/showQr");
       return;

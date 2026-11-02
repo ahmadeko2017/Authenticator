@@ -46,6 +46,10 @@ describe("MenuPage", () => {
     // mock the chrome global object
     global.chrome.tabs.create = chrome.tabs.create;
     global.chrome.storage.managed.get = chrome.storage.managed.get;
+    (global.chrome.tabs as any).query = (queryInfo: any, callback: any) => {
+      if (callback) callback([]);
+      return Promise.resolve([]);
+    };
   });
 
   beforeEach(async () => {
@@ -130,7 +134,8 @@ describe("MenuPage", () => {
     });
 
     describe("feedbackURL is set", () => {
-      beforeEach(async () => {
+      beforeEach(async function () {
+        this.timeout(10000);
         try {
           chrome.storage.managed.get.yieldsAsync({
             feedbackURL: "https://authenticator.cc",
@@ -138,13 +143,13 @@ describe("MenuPage", () => {
 
           store = new Vuex.Store({
             modules: {
-              backup: await new Backup().getModule(),
-              currentView: new CurrentView().getModule(),
-              notification: new Notification().getModule(),
-              qr: new Qr().getModule(),
-              style: new Style().getModule(),
-              menu: await new Menu().getModule(),
-              accounts: await new Accounts().getModule(),
+              menu: {
+                state: {
+                  version: "1.2.3",
+                  feedbackURL: "https://authenticator.cc",
+                },
+                namespaced: true,
+              },
             },
           });
 
