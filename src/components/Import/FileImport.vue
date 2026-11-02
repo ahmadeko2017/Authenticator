@@ -59,13 +59,21 @@ export default Vue.extend({
           } = {};
           let failedCount = 0;
           let succeededCount = 0;
-          try {
-            importData = JSON.parse(reader.result as string);
-            succeededCount = Object.keys(importData).filter(
-              (key) => ["key", "enc", "hash"].indexOf(key) === -1
-            ).length;
-          } catch (e) {
-            console.warn(e);
+          const rawText = ((reader.result as string) || "").trim();
+          let isJson = rawText.startsWith("{") || rawText.startsWith("[");
+
+          if (isJson) {
+            try {
+              importData = JSON.parse(rawText);
+              succeededCount = Object.keys(importData).filter(
+                (key) => ["key", "enc", "hash"].indexOf(key) === -1
+              ).length;
+            } catch {
+              isJson = false;
+            }
+          }
+
+          if (!isJson) {
             const result = await getEntryDataFromOTPAuthPerLine(
               reader.result as string
             );

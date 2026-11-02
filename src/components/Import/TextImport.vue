@@ -52,11 +52,18 @@ export default Vue.extend({
       } = {};
       let failedCount = 0;
       let succeededCount = 0;
-      try {
-        exportData = JSON.parse(this.importCode);
-      } catch (error) {
-        console.warn(error);
-        // Maybe one-otpauth-per line text
+      const rawText = this.importCode.trim();
+      let isJson = rawText.startsWith("{") || rawText.startsWith("[");
+
+      if (isJson) {
+        try {
+          exportData = JSON.parse(rawText);
+        } catch {
+          isJson = false;
+        }
+      }
+
+      if (!isJson) {
         const result = await getEntryDataFromOTPAuthPerLine(this.importCode);
         exportData = result.exportData;
         failedCount = result.failedCount;
