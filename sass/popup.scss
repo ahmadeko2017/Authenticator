@@ -23,7 +23,7 @@ body {
   overflow: hidden;
   border-radius: 16px;
   border: 1px solid hsl(var(--border));
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   cursor: default;
@@ -190,7 +190,7 @@ svg {
   height: 38px;
   display: flex;
   align-items: center;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus-within {
@@ -333,12 +333,12 @@ svg {
   position: relative;
   display: block;
   cursor: pointer;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  box-shadow: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    border-color: hsl(var(--primary) / 0.35);
-    box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: none;
     transform: translateY(-1px);
   }
 
