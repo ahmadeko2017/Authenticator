@@ -520,5 +520,9 @@
   },
   "activate_auto_filter": {
     "message": "Warning: Smart filter loosely matches the domain name to an account. Always verify that you are on the correct website before entering a code!"
+  },
+  "backup_enc_info": {
+    "message": "Your backup is protected and encrypted with your password (AES-256-GCM).",
+    "description": "Encrypted backup status text"
   }
 }

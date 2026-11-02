@@ -5,6 +5,9 @@
       <div class="text warning" v-if="!defaultEncryption">
         {{ i18n.export_info }}
       </div>
+      <div class="text" v-if="defaultEncryption" style="margin-bottom: 12px; font-weight: 500;">
+        🛡️ {{ i18n.backup_enc_info }}
+      </div>
       <div class="text">
         {{ i18n.backup_file_info }}
       </div>
@@ -17,12 +20,12 @@
       <a-button-link
         download="authenticator.txt"
         :href="exportOneLineOtpAuthFile"
-        v-if="!unsupportedAccounts && isDataLinkSupported"
+        v-if="!defaultEncryption && !unsupportedAccounts && isDataLinkSupported"
         >{{ i18n.download_backup }}</a-button-link
       >
       <button
         v-on:click="downloadBackUpOneLineOtpAuthFile()"
-        v-if="!unsupportedAccounts && !isDataLinkSupported"
+        v-if="!defaultEncryption && !unsupportedAccounts && !isDataLinkSupported"
         class="button"
       >
         {{ i18n.download_backup }}
@@ -30,12 +33,12 @@
       <a-button-link
         download="authenticator.json"
         :href="exportFile"
-        v-if="unsupportedAccounts && isDataLinkSupported"
+        v-if="!defaultEncryption && unsupportedAccounts && isDataLinkSupported"
         >{{ i18n.download_backup }}</a-button-link
       >
       <button
         v-on:click="downloadBackUpExportFile()"
-        v-if="unsupportedAccounts && !isDataLinkSupported"
+        v-if="!defaultEncryption && unsupportedAccounts && !isDataLinkSupported"
         class="button"
       >
         {{ i18n.download_backup }}
@@ -78,11 +81,15 @@ export default Vue.extend({
     const exportEncData = this.$store.state.accounts.exportEncData;
     const key = this.$store.state.accounts.key;
 
+    const isEncrypted = Boolean(this.$store.state.accounts.defaultEncryption);
+
     return {
       unsupportedAccounts: hasUnsupportedAccounts(exportData),
-      exportFile: getBackupFile(exportData),
+      exportFile: isEncrypted ? "" : getBackupFile(exportData),
       exportEncryptedFile: getBackupFile(exportEncData, key),
-      exportOneLineOtpAuthFile: getOneLineOtpBackupFile(exportData),
+      exportOneLineOtpAuthFile: isEncrypted
+        ? ""
+        : getOneLineOtpBackupFile(exportData),
     };
   },
   computed: {
@@ -155,11 +162,23 @@ export default Vue.extend({
       }
     },
     downloadBackUpOneLineOtpAuthFile() {
+      if (this.defaultEncryption) {
+        console.warn(
+          "[SECURITY] Ekspor plaintext diblokir karena Master Password aktif."
+        );
+        return;
+      }
       const exportData = this.$store.state.accounts.exportData;
       const t = getOneLineOtpBackupFile(exportData);
       window.open(t);
     },
     downloadBackUpExportFile() {
+      if (this.defaultEncryption) {
+        console.warn(
+          "[SECURITY] Ekspor plaintext diblokir karena Master Password aktif."
+        );
+        return;
+      }
       const exportData = this.$store.state.accounts.exportData;
       const t = getBackupFile(exportData);
       window.open(t);
