@@ -67,8 +67,9 @@ if (!document.getElementById("__ga_grayLayout__")) {
   });
 }
 
-sessionStorage.setItem("captureBoxPositionLeft", "0");
-sessionStorage.setItem("captureBoxPositionTop", "0");
+// Variabel in-memory untuk koordinat crop (CRIT/HIGH-06: isolasi dari DOM sessionStorage)
+let captureBoxPositionLeft = 0;
+let captureBoxPositionTop = 0;
 
 function showGrayLayout() {
   let grayLayout = document.getElementById("__ga_grayLayout__");
@@ -112,8 +113,8 @@ function grayLayoutDown(event: MouseEvent) {
     return;
   }
 
-  sessionStorage.setItem("captureBoxPositionLeft", event.clientX.toString());
-  sessionStorage.setItem("captureBoxPositionTop", event.clientY.toString());
+  captureBoxPositionLeft = event.clientX;
+  captureBoxPositionTop = event.clientY;
   captureBox.style.left = event.clientX + "px";
   captureBox.style.top = event.clientY + "px";
   captureBox.style.width = "1px";
@@ -137,22 +138,10 @@ function grayLayoutMove(event: MouseEvent) {
     return;
   }
 
-  const captureBoxLeft = Math.min(
-    Number(sessionStorage.getItem("captureBoxPositionLeft")),
-    event.clientX
-  );
-  const captureBoxTop = Math.min(
-    Number(sessionStorage.getItem("captureBoxPositionTop")),
-    event.clientY
-  );
-  const captureBoxWidth =
-    Math.abs(
-      Number(sessionStorage.getItem("captureBoxPositionLeft")) - event.clientX
-    ) - 1;
-  const captureBoxHeight =
-    Math.abs(
-      Number(sessionStorage.getItem("captureBoxPositionTop")) - event.clientY
-    ) - 1;
+  const captureBoxLeft = Math.min(captureBoxPositionLeft, event.clientX);
+  const captureBoxTop = Math.min(captureBoxPositionTop, event.clientY);
+  const captureBoxWidth = Math.abs(captureBoxPositionLeft - event.clientX) - 1;
+  const captureBoxHeight = Math.abs(captureBoxPositionTop - event.clientY) - 1;
   captureBox.style.left = captureBoxLeft + "px";
   captureBox.style.top = captureBoxTop + "px";
   captureBox.style.width = captureBoxWidth + "px";
@@ -177,24 +166,10 @@ function grayLayoutUp(event: MouseEvent) {
     return;
   }
 
-  const captureBoxLeft =
-    Math.min(
-      Number(sessionStorage.getItem("captureBoxPositionLeft")),
-      event.clientX
-    ) + 1;
-  const captureBoxTop =
-    Math.min(
-      Number(sessionStorage.getItem("captureBoxPositionTop")),
-      event.clientY
-    ) + 1;
-  const captureBoxWidth =
-    Math.abs(
-      Number(sessionStorage.getItem("captureBoxPositionLeft")) - event.clientX
-    ) - 1;
-  const captureBoxHeight =
-    Math.abs(
-      Number(sessionStorage.getItem("captureBoxPositionTop")) - event.clientY
-    ) - 1;
+  const captureBoxLeft = Math.min(captureBoxPositionLeft, event.clientX) + 1;
+  const captureBoxTop = Math.min(captureBoxPositionTop, event.clientY) + 1;
+  const captureBoxWidth = Math.abs(captureBoxPositionLeft - event.clientX) - 1;
+  const captureBoxHeight = Math.abs(captureBoxPositionTop - event.clientY) - 1;
 
   // make sure captureBox and grayLayout is hidden
   setTimeout(() => {

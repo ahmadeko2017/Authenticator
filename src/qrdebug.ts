@@ -51,22 +51,27 @@ function getQrDebug(
       const url = captureCanvas.toDataURL();
       const infoDom = document.getElementById("info");
       if (infoDom) {
-        infoDom.innerHTML =
-          "<b>Scan Data:</b><br>" +
-          `<br>` +
-          `Window Inner Width: ${windowWidth}<br>` +
-          `Width: ${width}<br>` +
-          `Height: ${height}<br>` +
-          `Left: ${left}<br>` +
-          `Top: ${top}<br>` +
-          `Screen Width: ${window.screen.width}<br>` +
-          `Screen Height: ${window.screen.height}<br>` +
-          `Capture Width: ${qr.width}<br>` +
-          `Capture Height: ${qr.height}<br>` +
-          `Device Pixel Ratio: ${devicePixelRatio} / ${window.devicePixelRatio}<br>` +
-          `Tab ID: ${tab.id}<br>` +
-          "<br>" +
-          "<b>Captured Screenshot:</b>";
+        infoDom.textContent = "";
+        const lines = [
+          "Scan Data:",
+          `Window Inner Width: ${Number(windowWidth)}`,
+          `Width: ${Number(width)}`,
+          `Height: ${Number(height)}`,
+          `Left: ${Number(left)}`,
+          `Top: ${Number(top)}`,
+          `Screen Width: ${window.screen.width}`,
+          `Screen Height: ${window.screen.height}`,
+          `Capture Width: ${qr.width}`,
+          `Capture Height: ${qr.height}`,
+          `Device Pixel Ratio: ${devicePixelRatio} / ${window.devicePixelRatio}`,
+          `Tab ID: ${Number(tab.id)}`,
+          "Captured Screenshot:",
+        ];
+        lines.forEach((line) => {
+          const div = document.createElement("div");
+          div.textContent = line;
+          infoDom.appendChild(div);
+        });
       }
 
       const qrDom = document.getElementById("qr") as HTMLImageElement;
