@@ -1,10 +1,23 @@
 import argon2 from "argon2-browser";
 
 window.addEventListener("message", (event) => {
-  const message = event.data;
   const source = event.source as Window;
-
   if (!source) {
+    return;
+  }
+
+  // Validasi keamanan: hanya proses pesan dari ekstensi yang sah
+  const isExtensionOrigin =
+    event.origin &&
+    (event.origin.startsWith("chrome-extension://") ||
+      event.origin.startsWith("moz-extension://"));
+
+  if (!isExtensionOrigin) {
+    return;
+  }
+
+  const message = event.data;
+  if (!message || typeof message !== "object") {
     return;
   }
 
